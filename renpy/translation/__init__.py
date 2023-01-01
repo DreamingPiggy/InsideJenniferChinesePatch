@@ -271,7 +271,11 @@ class Restructurer(object):
 
         digest = md5.hexdigest()[:8]
 
-        identifier = self.unique_identifier(self.label, digest)
+        # @dreampiggy - HACK rep_scene use previous label as hash
+        label_name = self.label
+        if label_name.startswith("rep_scene") and self.previous_label:
+            label_name = self.previous_label
+        identifier = self.unique_identifier(label_name, digest)
 
         for i in block:
             if isinstance(i, renpy.ast.Say):
@@ -312,6 +316,7 @@ class Restructurer(object):
                     if i.name.startswith("_"):
                         self.alternate = i.name
                     else:
+                        self.previous_label = self.label
                         self.label = i.name
                         self.alternate = None
 
@@ -327,7 +332,7 @@ class Restructurer(object):
             elif i.translatable:
                 # @dreampiggy HACK - skip voice translation
                 if isinstance(i, renpy.ast.UserStatement) and i.get_name() == "voice":
-                    pass
+                    new_children.append(i)
                 else:
                     group.append(i)
 
